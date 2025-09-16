@@ -19,10 +19,15 @@ def index(request):
     template_data['cart_total'] = cart_total
     return render(request, 'cart/index.html', {'template_data': template_data})
 def add(request, id):
-    get_object_or_404(Movie, id=id)
+    movie = get_object_or_404(Movie, id=id)
     cart = request.session.get('cart', {})
-    cart[id] = request.POST['quantity']
-    request.session['cart'] = cart
+    quantity = int(request.POST.get('quantity', 1))
+    # Only allow if enough stock
+    if movie.stock >= quantity:
+        cart[id] = request.POST['quantity']
+        request.session['cart'] = cart
+        movie.stock -= quantity
+        movie.save()
     return redirect('cart.index')
 
 def clear(request):
